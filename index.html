@@ -1,673 +1,246 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Barangay Incident Record System</title>
-<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
-<style>
-  /* ---------- RESET ---------- */
-  * { box-sizing: border-box; margin:0; padding:0; }
-  html,body { height:100%; font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial; -webkit-font-smoothing:antialiased; -moz-osx-font-smoothing:grayscale; }
-
-  /* ---------- BACKGROUND (professional radiant blue) ---------- */
-  body{
-    background: radial-gradient(1200px 600px at 10% 10%, rgba(255,255,255,0.03), transparent 10%),
-                linear-gradient(135deg,#0b2a66 0%, #123f8a 30%, #1c5aa8 60%, #2a78d0 100%);
-    min-height:100vh;
-    color:#05264f;
-    padding:28px;
-  }
-
-  /* ---------- LAYOUT ---------- */
-  .wrap { max-width:1200px; margin:0 auto; }
-  .card {
-    background: linear-gradient(180deg, rgba(255,255,255,0.95), rgba(245,250,255,0.9));
-    border-radius:14px;
-    padding:18px;
-    box-shadow: 0 12px 40px rgba(6,20,70,0.28);
-    border: 1px solid rgba(15,45,120,0.06);
-  }
-
-  header.app-header {
-    display:flex; justify-content:space-between; align-items:center; gap:12px;
-    background: linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
-    color:#eaf2ff; padding:14px 18px; border-radius:12px; margin-bottom:18px;
-  }
-  .app-title { display:flex; align-items:center; gap:12px; font-weight:900; font-size:18px; color:#eaf2ff; }
-  .app-title i { font-size:20px; color:#f7fbff; }
-  .header-actions { display:flex; gap:8px; align-items:center; }
-
-  /* ---------- PAGES ---------- */
-  .page { display:none; }
-  .page.active { display:block; }
-
-  /* ---------- LOGIN ---------- */
-  .login-wrap { min-height:72vh; display:flex; align-items:center; justify-content:center; }
-  .login-card { width:380px; padding:28px; border-radius:16px; text-align:center; }
-  .login-card h1 { font-family: Georgia, serif; font-size:20px; color:#0b2a66; margin-bottom:18px; }
-  .input { display:flex; gap:10px; align-items:center; background:#eef6ff; padding:10px 12px; border-radius:10px; margin-bottom:12px; border:1px solid rgba(13,35,80,0.03); }
-  .input i { color:#123a7b; font-size:18px; width:26px; text-align:center; }
-  .input input { border:0; outline:0; background:transparent; font-weight:700; color:#0b2a66; width:100%; padding:8px; font-size:15px; }
-  .btn { padding:10px 14px; border-radius:10px; border:0; cursor:pointer; font-weight:800; }
-  .btn-primary { background: linear-gradient(180deg,#2d66d9,#1541b8); color:white; box-shadow:0 8px 20px rgba(17,46,120,0.28); }
-  .btn-ghost { background:transparent; border:1px solid rgba(15,45,120,0.06); color:#0b2a66; }
-
-  /* ---------- DASHBOARD ---------- */
-  .grid { display:grid; grid-template-columns:1fr 420px; gap:18px; align-items:start; }
-  .panel-left { padding:16px; }
-  .panel-right { padding:16px; }
-
-  .dash-actions { display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; gap:8px; }
-  .big-buttons { display:flex; gap:12px; flex-wrap:wrap; }
-  .dash-btn { min-width:150px; min-height:120px; border-radius:12px; display:flex; flex-direction:column; justify-content:center; align-items:center; gap:10px; background:linear-gradient(180deg,#2b63d1,#143f9d); color:white; font-weight:900; cursor:pointer; box-shadow:0 8px 24px rgba(10,30,90,0.28); }
-  .dash-btn i { font-size:28px; }
-
-  .small-stat { background:linear-gradient(180deg,#163f8b,#0f2f72); color:white; padding:12px; border-radius:10px; font-weight:900; text-align:center; }
-
-  /* ---------- LISTS ---------- */
-  ul.record-list { list-style:none; margin-top:12px; padding:0; }
-  li.record-item {
-    display:flex; justify-content:space-between; align-items:center; gap:12px;
-    background:linear-gradient(180deg,#ffffff,#f5fbff); padding:12px; border-radius:10px; margin-bottom:10px; box-shadow:0 8px 20px rgba(10,30,80,0.06);
-  }
-  .rec-left { display:flex; gap:12px; align-items:center; }
-  .rec-title { font-weight:900; color:#0b2a66; }
-  .rec-sub { font-size:13px; color:#2a5aa2; font-weight:800; }
-
-  /* actions (three-dot) */
-  .actions { position:relative; }
-  .dot-btn { border:0; background:transparent; cursor:pointer; padding:8px; font-size:18px; color:#0b2a66; border-radius:8px; }
-  .menu { position:absolute; right:0; top:36px; min-width:160px; background:white; border-radius:10px; box-shadow:0 12px 40px rgba(6,18,60,0.25); overflow:hidden; display:none; z-index:50; }
-  .menu.show { display:block; }
-  .menu button { width:100%; text-align:left; padding:10px 12px; border:0; background:transparent; cursor:pointer; font-weight:800; color:#0b2a66; }
-  .menu button:hover { background:linear-gradient(90deg,#eef6ff,#ffffff); }
-
-  /* ---------- FORMS ---------- */
-  .form-card { padding:18px; border-radius:12px; background:linear-gradient(180deg,#fff,#f7fbff); box-shadow:0 12px 30px rgba(8,20,60,0.06); }
-  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-  label { font-weight:900; font-size:13px; color:#123061; display:block; margin-bottom:6px; }
-  input[type=text], input[type=date], input[type=time], select, textarea { width:100%; padding:10px; border-radius:10px; border:1px solid rgba(13,35,80,0.05); font-weight:700; font-size:14px; }
-  textarea { min-height:92px; resize:vertical; }
-
-  .form-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:12px; }
-
-  /* ---------- VIEW ---------- */
-  .view-row { display:flex; gap:14px; flex-wrap:wrap; }
-  .view-col { flex:1; min-width:220px; }
-
-  /* ---------- DELETED HISTORY ---------- */
-  .history-item { display:flex; justify-content:space-between; align-items:center; padding:10px; background:linear-gradient(180deg,#eef7ff,#ffffff); border-radius:10px; margin-bottom:8px; font-weight:800; color:#0b2a66; }
-
-  /* ---------- UTILITY ---------- */
-  .muted { color:#6a86b5; font-weight:800; font-size:13px; }
-  .small { font-size:13px; font-weight:800; }
-  @media (max-width:980px){
-    .grid { grid-template-columns:1fr; }
-    .panel-right { order:2; }
-    .panel-left { order:1; }
-  }
-
-</style>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Barangay Incident Record System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <div class="wrap">
+    <div class="wrap">
 
-    <!-- header -->
-    <header class="app-header">
-      <div class="app-title"><i class="fas fa-shield-alt"></i> Barangay Incident Record System</div>
-      <div class="header-actions">
-        <button id="btn-logout" class="btn btn-ghost" title="Logout" style="display:none"><i class="fas fa-sign-out-alt"></i> Logout</button>
-      </div>
-    </header>
-
-    <!-- LOGIN PAGE -->
-    <section id="login-page" class="page active">
-      <div class="login-wrap">
-        <div class="login-card card">
-          <h1>Barangay Incident System</h1>
-          <form id="login-form" autocomplete="off">
-            <div class="input"><i class="fas fa-user"></i><input id="username" placeholder="Username" required autofocus /></div>
-            <div class="input"><i class="fas fa-lock"></i><input id="password" type="password" placeholder="Password" required /></div>
-            <div style="display:flex; gap:10px; margin-top:10px;">
-              <button type="submit" class="btn btn-primary" style="flex:1">LOGIN</button>
+        <header class="app-header">
+            <div class="app-title"><i class="fas fa-shield-alt"></i> Barangay Incident Record System</div>
+            <div class="header-actions">
+                <button id="btn-logout" class="btn btn-ghost" title="Logout" style="display:none"><i class="fas fa-sign-out-alt"></i> Logout</button>
             </div>
-            <div style="margin-top:10px; text-align:center"><a href="#" id="forgot" class="muted">Forgot password?</a></div>
-          </form>
-        </div>
-      </div>
-    </section>
+        </header>
 
-    <!-- DASHBOARD PAGE -->
-    <section id="dashboard-page" class="page">
-      <div class="grid">
-
-        <!-- left -->
-        <div class="panel-left card">
-          <div class="dash-actions">
-            <div style="font-weight:900;color:#0b2a66">Dashboard</div>
-            <div style="display:flex; gap:8px;">
-              <button id="add-record" class="btn btn-primary"><i class="fas fa-plus"></i> Add Record</button>
-              <button id="open-deleted" class="btn btn-ghost"><i class="fas fa-trash-restore"></i> Deleted</button>
+        <section id="login-page" class="page active">
+            <div class="login-wrap">
+                <div class="login-card card">
+                    <h1>Barangay Incident System</h1>
+                    <form id="login-form" autocomplete="off">
+                        <div class="input"><i class="fas fa-user"></i><input id="username" placeholder="Username" required autofocus /></div>
+                        <div class="input"><i class="fas fa-lock"></i><input id="password" type="password" placeholder="Password" required /></div>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button type="submit" class="btn btn-primary" style="flex:1">LOGIN</button>
+                        </div>
+                        <div style="margin-top:10px; text-align:center"><a href="#" id="create-account" class="muted">Create Account</a></div>
+                    </form>
+                </div>
             </div>
-          </div>
+        </section>
 
-          <div class="big-buttons">
-            <div id="goto-fatal" class="dash-btn"><i class="fas fa-skull-crossbones"></i> Fatal</div>
-            <div id="goto-nonfatal" class="dash-btn"><i class="fas fa-notes-medical"></i> Non-Fatal</div>
-          </div>
+        <section id="create-page" class="page">
+            <div class="login-wrap">
+                <div class="login-card card" style="width:400px; text-align:left; padding:32px;">
+                    <h2 style="font-size:24px; color:#0b2a66; margin-bottom:20px; text-align:center;">Create New Account</h2>
+                    <form id="create-form" autocomplete="off">
+                        <div class="input"><i class="fas fa-user"></i><input id="c-username" placeholder="Choose Username" required /></div>
+                        <div class="input"><i class="fas fa-lock"></i><input id="c-password" type="password" placeholder="Choose Password" required /></div>
+                        <div class="input"><i class="fas fa-lock"></i><input id="c-password-confirm" type="password" placeholder="Confirm Password" required /></div>
 
-          <div style="display:flex; gap:12px; margin-top:14px;">
-            <div class="small-stat" style="flex:1">
-              <div class="small">Fatal — This Month</div>
-              <div id="fatal-month-count" style="font-size:20px; margin-top:6px">0</div>
-              <div id="fatal-month-list" class="muted" style="margin-top:6px"></div>
+                        <div style="display:flex; gap:10px; margin-top:20px;">
+                            <button type="button" id="back-to-login" class="btn btn-ghost" style="flex:1">Back to Login</button>
+                            <button type="submit" class="btn btn-primary" style="flex:1">REGISTER</button>
+                        </div>
+                    </form>
+                </div>
             </div>
-            <div class="small-stat" style="flex:1">
-              <div class="small">Fatal — This Year</div>
-              <div id="fatal-year-count" style="font-size:20px; margin-top:6px">0</div>
-              <div id="fatal-year-list" class="muted" style="margin-top:6px"></div>
-            </div>
-          </div>
+        </section>
 
-          <div style="display:flex; gap:12px; margin-top:12px;">
-            <div class="small-stat" style="flex:1">
-              <div class="small">Non-Fatal — This Month</div>
-              <div id="nonfatal-month-count" style="font-size:20px; margin-top:6px">0</div>
-              <div id="nonfatal-month-list" class="muted" style="margin-top:6px"></div>
-            </div>
-            <div class="small-stat" style="flex:1">
-              <div class="small">Non-Fatal — This Year</div>
-              <div id="nonfatal-year-count" style="font-size:20px; margin-top:6px">0</div>
-              <div id="nonfatal-year-list" class="muted" style="margin-top:6px"></div>
-            </div>
-          </div>
+        <section id="dashboard-page" class="page">
+            <div class="grid">
+                <div class="panel-left card">
+                    <div class="dash-actions">
+                        <div style="font-weight:900;color:#0b2a66">Dashboard</div>
+                        <div style="display:flex; gap:8px;">
+                            <button id="add-record" class="btn btn-primary"><i class="fas fa-plus"></i> Add Record</button>
+                            <button id="open-deleted" class="btn btn-ghost"><i class="fas fa-trash-restore"></i> Deleted</button>
+                        </div>
+                    </div>
 
+                    <div class="big-buttons">
+                        <div id="goto-fatal" class="dash-btn"><i class="fas fa-skull-crossbones"></i> Fatal</div>
+                        <div id="goto-nonfatal" class="dash-btn"><i class="fas fa-notes-medical"></i> Non-Fatal</div>
+                    </div>
+
+                    <div style="display:flex; gap:12px; margin-top:14px;">
+                        <div class="small-stat" style="flex:1">
+                            <div class="small">Fatal — This Month</div>
+                            <div id="fatal-month-count" style="font-size:20px; margin-top:6px">0</div>
+                            <div id="fatal-month-list" class="muted" style="margin-top:6px"></div>
+                        </div>
+                        <div class="small-stat" style="flex:1">
+                            <div class="small">Fatal — This Year</div>
+                            <div id="fatal-year-count" style="font-size:20px; margin-top:6px">0</div>
+                            <div id="fatal-year-list" class="muted" style="margin-top:6px"></div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:12px; margin-top:12px;">
+                        <div class="small-stat" style="flex:1">
+                            <div class="small">Non-Fatal — This Month</div>
+                            <div id="nonfatal-month-count" style="font-size:20px; margin-top:6px">0</div>
+                            <div id="nonfatal-month-list" class="muted" style="margin-top:6px"></div>
+                        </div>
+                        <div class="small-stat" style="flex:1">
+                            <div class="small">Non-Fatal — This Year</div>
+                            <div id="nonfatal-year-count" style="font-size:20px; margin-top:6px">0</div>
+                            <div id="nonfatal-year-list" class="muted" style="margin-top:6px"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-right card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-weight:900; color:#0b2a66">Recent Records</div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <select id="filter-type" style="padding:8px; border-radius:8px; border:1px solid rgba(13,35,80,0.06); font-weight:900;">
+                                <option value="all">All</option>
+                                <option value="fatal">Fatal</option>
+                                <option value="nonfatal">Non-Fatal</option>
+                            </select>
+                            <button id="export-json" class="btn btn-ghost">Export</button>
+                        </div>
+                    </div>
+
+                    <ul id="recent-list" class="record-list"></ul>
+                    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
+                        <button id="clear-all" class="btn btn-ghost">Move All to Deleted</button>
+                        <button id="clear-perm" class="btn btn-ghost" title="Permanently clear deleted" style="display:none">Clear Deleted</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="fatal-page" class="page">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="font-weight:900;color:#0b2a66">Fatal Records</div>
+                    <div style="display:flex; gap:8px;">
+                        <button id="back-to-dash-from-fatal" class="btn btn-ghost">Back</button>
+                        <button id="add-fatal" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
+                    </div>
+                </div>
+                <ul id="fatal-list" class="record-list"></ul>
+            </div>
+        </section>
+
+        <section id="nonfatal-page" class="page">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="font-weight:900;color:#0b2a66">Non-Fatal Records</div>
+                    <div style="display:flex; gap:8px;">
+                        <button id="back-to-dash-from-nonfatal" class="btn btn-ghost">Back</button>
+                        <button id="add-nonfatal" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
+                    </div>
+                </div>
+                <ul id="nonfatal-list" class="record-list"></ul>
+            </div>
+        </section>
+
+        <section id="add-page" class="page">
+            <div class="form-card card" style="max-width:820px; margin:0 auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div id="form-title" style="font-weight:900;color:#123061">Add New Record</div>
+                    <div style="display:flex; gap:8px;">
+                        <button id="cancel-add" class="btn btn-ghost">Cancel</button>
+                        <button id="save-record" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+
+                <form id="record-form" class="form-grid" style="margin-top:12px;">
+                    <div>
+                        <label>Type</label>
+                        <select id="type" required>
+                            <option value="" disabled selected>Select type</option>
+                            <option value="fatal">Fatal</option>
+                            <option value="nonfatal">Non-Fatal</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Date</label>
+                        <input id="date" type="date" required />
+                    </div>
+                    <div>
+                        <label>Time</label>
+                        <input id="time" type="time" />
+                    </div>
+                    <div>
+                        <label>Person</label>
+                        <input id="person" type="text" placeholder="Name or Identifier" required />
+                    </div>
+                    <div class="full" style="grid-column:1 / -1;">
+                        <label>Location</label>
+                        <input id="location" type="text" placeholder="Zone / Street / Barangay" required />
+                    </div>
+                    <div class="full" style="grid-column:1 / -1;">
+                        <label>Description</label>
+                        <textarea id="description" placeholder="Details..." required></textarea>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="view-page" class="page">
+            <div class="view-card card" style="max-width:820px; margin:0 auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div id="view-title" style="font-weight:900;color:#123061">View Record</div>
+                    <div style="display:flex; gap:8px;">
+                        <button id="back-from-view" class="btn btn-ghost">Back</button>
+                        <button id="edit-from-view" class="btn btn-primary">Edit</button>
+                    </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                    <div class="view-row">
+                        <div class="view-col">
+                            <div class="small">Type</div>
+                            <div id="v-type" class="rec-title"></div>
+                            <div style="margin-top:8px" class="small">Person</div>
+                            <div id="v-person" class="rec-title"></div>
+                            <div style="margin-top:8px" class="small">Location</div>
+                            <div id="v-location" class="rec-title"></div>
+                        </div>
+                        <div class="view-col">
+                            <div class="small">Date & Time</div>
+                            <div id="v-datetime" class="rec-sub"></div>
+                            <div style="margin-top:8px" class="small">Status</div>
+                            <div id="v-status" class="rec-sub"></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:12px;">
+                        <div class="small">Description</div>
+                        <div id="v-desc" style="margin-top:8px; font-weight:900; color:#083067;"></div>
+                    </div>
+
+                    <div style="margin-top:12px; display:flex; gap:8px;">
+                        <button id="view-share" class="btn btn-ghost"><i class="fas fa-share-alt"></i> Share</button>
+                        <button id="view-delete" class="btn btn-primary" style="background:#d9534f; color:white"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="deleted-page" class="page">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="font-weight:900;color:#0b2a66">Deleted Records History</div>
+                    <div style="display:flex; gap:8px;">
+                        <button id="back-from-deleted" class="btn btn-ghost">Back</button>
+                        <button id="clear-deleted-perm" class="btn btn-primary" style="background:#d9534f;color:white">Clear Permanently</button>
+                    </div>
+                </div>
+
+                <div id="deleted-list"></div>
+            </div>
+        </section>
     </div>
-        </div>
 
-        <!-- right -->
-        <div class="panel-right card">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <div style="font-weight:900; color:#0b2a66">Recent Records</div>
-            <div style="display:flex; gap:8px; align-items:center;">
-              <select id="filter-type" style="padding:8px; border-radius:8px; border:1px solid rgba(13,35,80,0.06); font-weight:900;">
-                <option value="all">All</option>
-                <option value="fatal">Fatal</option>
-                <option value="nonfatal">Non-Fatal</option>
-              </select>
-              <button id="export-json" class="btn btn-ghost">Export</button>
-            </div>
-          </div>
-
-          <ul id="recent-list" class="record-list"></ul>
-          <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
-            <button id="clear-all" class="btn btn-ghost">Move All to Deleted</button>
-            <button id="clear-perm" class="btn btn-ghost" title="Permanently clear deleted" style="display:none">Clear Deleted</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FATAL PAGE -->
-    <section id="fatal-page" class="page">
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <div style="font-weight:900;color:#0b2a66">Fatal Records</div>
-          <div style="display:flex; gap:8px;">
-            <button id="back-to-dash-from-fatal" class="btn btn-ghost">Back</button>
-            <button id="add-fatal" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
-          </div>
-        </div>
-        <ul id="fatal-list" class="record-list"></ul>
-      </div>
-    </section>
-
-    <!-- NON-FATAL PAGE -->
-    <section id="nonfatal-page" class="page">
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <div style="font-weight:900;color:#0b2a66">Non-Fatal Records</div>
-          <div style="display:flex; gap:8px;">
-            <button id="back-to-dash-from-nonfatal" class="btn btn-ghost">Back</button>
-            <button id="add-nonfatal" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
-          </div>
-        </div>
-        <ul id="nonfatal-list" class="record-list"></ul>
-      </div>
-    </section>
-
-    <!-- ADD / EDIT PAGE -->
-    <section id="add-page" class="page">
-      <div class="form-card card" style="max-width:820px; margin:0 auto;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div id="form-title" style="font-weight:900;color:#123061">Add New Record</div>
-          <div style="display:flex; gap:8px;">
-            <button id="cancel-add" class="btn btn-ghost">Cancel</button>
-            <button id="save-record" class="btn btn-primary">Save</button>
-          </div>
-        </div>
-
-        <form id="record-form" class="form-grid" style="margin-top:12px;">
-          <div>
-            <label>Type</label>
-            <select id="type" required>
-              <option value="" disabled selected>Select type</option>
-              <option value="fatal">Fatal</option>
-              <option value="nonfatal">Non-Fatal</option>
-            </select>
-          </div>
-          <div>
-            <label>Date</label>
-            <input id="date" type="date" required />
-          </div>
-          <div>
-            <label>Time</label>
-            <input id="time" type="time" />
-          </div>
-          <div>
-            <label>Person</label>
-            <input id="person" type="text" placeholder="Name or Identifier" required />
-          </div>
-          <div class="full" style="grid-column:1 / -1;">
-            <label>Location</label>
-            <input id="location" type="text" placeholder="Zone / Street / Barangay" required />
-          </div>
-          <div class="full" style="grid-column:1 / -1;">
-            <label>Description</label>
-            <textarea id="description" placeholder="Details..." required></textarea>
-          </div>
-        </form>
-      </div>
-    </section>
-
-    <!-- VIEW PAGE -->
-    <section id="view-page" class="page">
-      <div class="view-card card" style="max-width:820px; margin:0 auto;">
-        <div style="display:flex; justify-content:space-between; align-items:center;">
-          <div id="view-title" style="font-weight:900;color:#123061">View Record</div>
-          <div style="display:flex; gap:8px;">
-            <button id="back-from-view" class="btn btn-ghost">Back</button>
-            <button id="edit-from-view" class="btn btn-primary">Edit</button>
-          </div>
-        </div>
-
-        <div style="margin-top:12px;">
-          <div class="view-row">
-            <div class="view-col">
-              <div class="small">Type</div>
-              <div id="v-type" class="rec-title"></div>
-              <div style="margin-top:8px" class="small">Person</div>
-              <div id="v-person" class="rec-title"></div>
-              <div style="margin-top:8px" class="small">Location</div>
-              <div id="v-location" class="rec-title"></div>
-            </div>
-            <div class="view-col">
-              <div class="small">Date & Time</div>
-              <div id="v-datetime" class="rec-sub"></div>
-              <div style="margin-top:8px" class="small">Status</div>
-              <div id="v-status" class="rec-sub"></div>
-            </div>
-          </div>
-
-          <div style="margin-top:12px;">
-            <div class="small">Description</div>
-            <div id="v-desc" style="margin-top:8px; font-weight:900; color:#083067;"></div>
-          </div>
-
-          <div style="margin-top:12px; display:flex; gap:8px;">
-            <button id="view-share" class="btn btn-ghost"><i class="fas fa-share-alt"></i> Share</button>
-            <button id="view-delete" class="btn btn-primary" style="background:#d9534f; color:white"><i class="fas fa-trash"></i> Delete</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- DELETED PAGE -->
-    <section id="deleted-page" class="page">
-      <div class="card">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-          <div style="font-weight:900;color:#0b2a66">Deleted Records History</div>
-          <div style="display:flex; gap:8px;">
-            <button id="back-from-deleted" class="btn btn-ghost">Back</button>
-            <button id="clear-deleted-perm" class="btn btn-primary" style="background:#d9534f;color:white">Clear Permanently</button>
-          </div>
-        </div>
-
-        <div id="deleted-list"></div>
-      </div>
-    </section>
-
-  </div>
-
-<script>
-/* -------------------------
-   Data model & storage keys
-   ------------------------- */
-const STORAGE = {
-  FATAL: 'brgy_fatal_v1',
-  NONFATAL: 'brgy_nonfatal_v1',
-  DELETED: 'brgy_deleted_v1'
-};
-
-let fatalRecords = JSON.parse(localStorage.getItem(STORAGE.FATAL) || '[]');
-let nonFatalRecords = JSON.parse(localStorage.getItem(STORAGE.NONFATAL) || '[]');
-let deletedRecords = JSON.parse(localStorage.getItem(STORAGE.DELETED) || '[]');
-
-function saveAll(){
-  localStorage.setItem(STORAGE.FATAL, JSON.stringify(fatalRecords));
-  localStorage.setItem(STORAGE.NONFATAL, JSON.stringify(nonFatalRecords));
-  localStorage.setItem(STORAGE.DELETED, JSON.stringify(deletedRecords));
-}
-
-/* ---------- Helpers ---------- */
-function uid(){ return Date.now().toString(36) + '-' + Math.floor(Math.random()*9000+1000); }
-function showPage(id){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  // show logout if not login
-  document.getElementById('btn-logout').style.display = (id==='login-page')? 'none' : 'inline-block';
-  window.scrollTo(0,0);
-}
-function formatDateTime(dateStr, timeStr){
-  if(!dateStr) return '';
-  const d = new Date((dateStr || '') + 'T' + (timeStr || '00:00'));
-  if(isNaN(d)) return (dateStr || '') + (timeStr? ' ' + timeStr : '');
-  return d.toLocaleString();
-}
-
-/* ---------- AUTH ---------- */
-document.getElementById('login-form').addEventListener('submit', (e)=>{
-  e.preventDefault();
-  const u = document.getElementById('username').value.trim();
-  const p = document.getElementById('password').value.trim();
-  if(u==='admin' && p==='password123'){
-    afterLogin();
-  } else {
-    alert('Invalid credentials. (Use admin / password123 or Demo)');
-  }
-});
-document.getElementById('btn-logout').addEventListener('click', ()=>{
-  if(confirm('Logout?')) showPage('login-page');
-});
-
-/* ---------- NAV ---------- */
-document.getElementById('add-record').addEventListener('click', ()=>openAdd());
-document.getElementById('goto-fatal').addEventListener('click', ()=>{ populateList('fatal'); showPage('fatal-page'); });
-document.getElementById('goto-nonfatal').addEventListener('click', ()=>{ populateList('nonfatal'); showPage('nonfatal-page'); });
-document.getElementById('open-deleted').addEventListener('click', ()=>{ populateDeleted(); showPage('deleted-page'); });
-document.getElementById('back-to-dash-from-fatal').addEventListener('click', ()=> showPage('dashboard-page'));
-document.getElementById('back-to-dash-from-nonfatal').addEventListener('click', ()=> showPage('dashboard-page'));
-document.getElementById('back-from-deleted').addEventListener('click', ()=> showPage('dashboard-page'));
-
-/* ---------- FORM: Add / Edit ---------- */
-let editing = null; // {type:'fatal'|'nonfatal', id:...} or null
-
-function openAdd(prefType){
-  editing = null;
-  document.getElementById('form-title').textContent = 'Add New Record';
-  const form = document.getElementById('record-form');
-  form.reset();
-  document.getElementById('date').valueAsDate = new Date();
-  if(prefType) document.getElementById('type').value = prefType;
-  showPage('add-page');
-}
-document.getElementById('add-fatal').addEventListener('click', ()=>openAdd('fatal'));
-document.getElementById('add-nonfatal').addEventListener('click', ()=>openAdd('nonfatal'));
-document.getElementById('cancel-add').addEventListener('click', ()=> showPage('dashboard-page'));
-document.getElementById('save-record').addEventListener('click', ()=> document.getElementById('record-form').dispatchEvent(new Event('submit')));
-
-document.getElementById('record-form').addEventListener('submit', function(e){
-  e.preventDefault();
-  const r = {
-    id: editing ? editing.id : uid(),
-    type: document.getElementById('type').value,
-    date: document.getElementById('date').value,
-    time: document.getElementById('time').value,
-    person: document.getElementById('person').value.trim(),
-    location: document.getElementById('location').value.trim(),
-    description: document.getElementById('description').value.trim(),
-    status: 'Open',
-    createdAt: new Date().toISOString()
-  };
-  if(!r.type){ alert('Select type'); return; }
-  if(editing){
-    if(editing.type === 'fatal') fatalRecords = fatalRecords.map(x => x.id===r.id ? {...x,...r} : x);
-    else nonFatalRecords = nonFatalRecords.map(x => x.id===r.id ? {...x,...r} : x);
-    editing = null;
-    saveAll();
-    populateList(r.type);
-    showPage(r.type==='fatal' ? 'fatal-page' : 'nonfatal-page');
-  } else {
-    if(r.type === 'fatal'){ fatalRecords.unshift(r); saveAll(); populateList('fatal'); viewRecord(r); }
-    else { nonFatalRecords.unshift(r); saveAll(); populateList('nonfatal'); viewRecord(r); }
-  }
-  renderDashboard();
-});
-
-/* ---------- ITEM ELEMENT (three-dot menu) ---------- */
-function createRecordElement(r){
-  const li = document.createElement('li'); li.className='record-item';
-  const left = document.createElement('div'); left.className='rec-left';
-  const info = document.createElement('div');
-  info.innerHTML = `<div class="rec-title">${escapeHtml(r.person)}</div><div class="rec-sub">${escapeHtml(r.location)} • ${formatDateTime(r.date,r.time)}</div>`;
-  left.appendChild(info);
-  li.appendChild(left);
-
-  const actions = document.createElement('div'); actions.className='actions';
-  const dot = document.createElement('button'); dot.className='dot-btn'; dot.innerHTML = '<i class="fas fa-ellipsis-vertical"></i>';
-  const menu = document.createElement('div'); menu.className='menu';
-  const btnView = document.createElement('button'); btnView.innerHTML = '<i class="fas fa-eye"></i> View';
-  const btnEdit = document.createElement('button'); btnEdit.innerHTML = '<i class="fas fa-pen"></i> Edit';
-  const btnShare = document.createElement('button'); btnShare.innerHTML = '<i class="fas fa-share-alt"></i> Share';
-  const btnDelete = document.createElement('button'); btnDelete.innerHTML = '<i class="fas fa-trash"></i> Delete';
-  menu.appendChild(btnView); menu.appendChild(btnEdit); menu.appendChild(btnShare); menu.appendChild(btnDelete);
-  actions.appendChild(dot); actions.appendChild(menu);
-  li.appendChild(actions);
-
-  // toggle
-  dot.addEventListener('click', (ev)=>{ ev.stopPropagation(); document.querySelectorAll('.menu').forEach(m=>m.classList.remove('show')); menu.classList.toggle('show'); });
-  // close on outside click
-  document.addEventListener('click', ()=> menu.classList.remove('show'));
-
-  btnView.addEventListener('click', (e)=>{ e.stopPropagation(); menu.classList.remove('show'); viewRecord(r); });
-  btnEdit.addEventListener('click', (e)=>{ e.stopPropagation(); menu.classList.remove('show'); startEdit(r); });
-  btnShare.addEventListener('click', (e)=>{ e.stopPropagation(); menu.classList.remove('show'); shareRecord(r); });
-  btnDelete.addEventListener('click', (e)=>{ e.stopPropagation(); menu.classList.remove('show'); confirmDelete(r); });
-
-  return li;
-}
-
-/* ---------- Render lists ---------- */
-function populateList(type){
-  const listEl = (type==='fatal') ? document.getElementById('fatal-list') : document.getElementById('nonfatal-list');
-  const records = (type==='fatal') ? fatalRecords : nonFatalRecords;
-  listEl.innerHTML = '';
-  if(records.length===0){ listEl.innerHTML = '<li class="record-item">No records.</li>'; return; }
-  records.forEach(r => { listEl.appendChild(createRecordElement(r)); });
-}
-
-function renderRecent(filter='all'){
-  const container = document.getElementById('recent-list');
-  container.innerHTML = '';
-  let all = [...fatalRecords.map(x=>({...x, type:'fatal'})), ...nonFatalRecords.map(x=>({...x, type:'nonfatal'}))];
-  all.sort((a,b)=> new Date(b.createdAt) - new Date(a.createdAt));
-  if(filter!=='all') all = all.filter(x=>x.type===filter);
-  if(all.length===0){ container.innerHTML = '<li class="record-item">No recent records.</li>'; return; }
-  all.slice(0,30).forEach(r => container.appendChild(createRecordElement(r)));
-}
-
-/* ---------- View / Edit / Delete / Share ---------- */
-let currentView = null;
-function viewRecord(r){
-  currentView = r;
-  document.getElementById('view-title').textContent = `${r.type.toUpperCase()} — ${r.person}`;
-  document.getElementById('v-type').textContent = r.type;
-  document.getElementById('v-person').textContent = r.person;
-  document.getElementById('v-location').textContent = r.location;
-  document.getElementById('v-datetime').textContent = formatDateTime(r.date,r.time);
-  document.getElementById('v-status').textContent = r.status || 'Open';
-  document.getElementById('v-desc').textContent = r.description;
-  showPage('view-page');
-}
-document.getElementById('back-from-view').addEventListener('click', ()=> showPage('dashboard-page'));
-document.getElementById('edit-from-view').addEventListener('click', ()=> { if(currentView) startEdit(currentView); });
-
-function startEdit(r){
-  editing = { id: r.id, type: r.type };
-  document.getElementById('form-title').textContent = 'Edit Record';
-  document.getElementById('type').value = r.type;
-  document.getElementById('date').value = r.date;
-  document.getElementById('time').value = r.time;
-  document.getElementById('person').value = r.person;
-  document.getElementById('location').value = r.location;
-  document.getElementById('description').value = r.description;
-  showPage('add-page');
-}
-
-function confirmDelete(r){
-  if(!confirm('Move this record to Deleted History?')) return;
-  // remove from active
-  if(r.type === 'fatal') fatalRecords = fatalRecords.filter(x=>x.id !== r.id);
-  else nonFatalRecords = nonFatalRecords.filter(x=>x.id !== r.id);
-  deletedRecords.unshift({...r, removedAt: new Date().toISOString()});
-  saveAll();
-  renderAll();
-  showPage('dashboard-page');
-}
-
-/* Share */
-async function shareRecord(r){
-  const text = `Barangay Incident\nType: ${r.type}\nPerson: ${r.person}\nDate: ${r.date} ${r.time}\nLocation: ${r.location}\nDesc: ${r.description}`;
-  if(navigator.share){
-    try{ await navigator.share({title:'Barangay Incident', text}); alert('Shared'); }
-    catch(e){ alert('Share cancelled or failed'); }
-  } else {
-    await navigator.clipboard.writeText(text);
-    alert('Summary copied to clipboard (no native share support).');
-  }
-}
-
-/* ---------- Deleted History ---------- */
-function populateDeleted(){
-  const out = document.getElementById('deleted-list'); out.innerHTML = '';
-  if(deletedRecords.length===0){ out.innerHTML = '<div class="muted">No deleted records.</div>'; return; }
-  deletedRecords.forEach(r=>{
-    const row = document.createElement('div'); row.className='history-item';
-    row.innerHTML = `<div><strong>${escapeHtml(r.person)}</strong> <span class="muted">(${r.type})</span><div class="muted">${formatDateTime(r.date,r.time)}</div></div>`;
-    const actions = document.createElement('div');
-    const btnRestore = document.createElement('button'); btnRestore.className='btn btn-ghost'; btnRestore.textContent='Restore';
-    const btnPerm = document.createElement('button'); btnPerm.className='btn btn-primary'; btnPerm.style.background='#d9534f'; btnPerm.style.color='white'; btnPerm.textContent='Delete';
-    actions.appendChild(btnRestore); actions.appendChild(btnPerm);
-    row.appendChild(actions);
-    out.appendChild(row);
-
-    btnRestore.addEventListener('click', ()=>{
-      if(confirm('Restore this record?')){
-        const copy = {...r}; delete copy.removedAt;
-        if(r.type === 'fatal') fatalRecords.unshift(copy); else nonFatalRecords.unshift(copy);
-        deletedRecords = deletedRecords.filter(x=>x.id !== r.id);
-        saveAll(); renderAll(); populateDeleted();
-      }
-    });
-    btnPerm.addEventListener('click', ()=>{
-      if(confirm('Permanently delete this record? This cannot be undone.')){
-        deletedRecords = deletedRecords.filter(x=>x.id !== r.id); saveAll(); populateDeleted();
-      }
-    });
-  });
-}
-document.getElementById('clear-deleted-perm').addEventListener('click', ()=>{
-  if(deletedRecords.length===0) return alert('No deleted records.');
-  if(confirm('Permanently remove ALL deleted records?')){ deletedRecords = []; saveAll(); populateDeleted(); }
-});
-
-/* Move all to deleted */
-document.getElementById('clear-all').addEventListener('click', ()=>{
-  if(confirm('Move ALL active records to Deleted History?')){
-    const now = new Date().toISOString();
-    fatalRecords.forEach(r=> deletedRecords.unshift({...r, removedAt: now}));
-    nonFatalRecords.forEach(r=> deletedRecords.unshift({...r, removedAt: now}));
-    fatalRecords = []; nonFatalRecords = []; saveAll(); renderAll(); populateDeleted(); alert('All moved to Deleted History.');
-  }
-});
-
-/* Export JSON */
-document.getElementById('export-json').addEventListener('click', ()=>{
-  const blob = new Blob([JSON.stringify({fatalRecords, nonFatalRecords, deletedRecords}, null, 2)], {type:'application/json'});
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a'); a.href = url; a.download = 'brgy-records-export.json'; a.click(); URL.revokeObjectURL(url);
-});
-
-/* ---------- Dashboard stats ---------- */
-function countWithin(records, unit){
-  const now = new Date();
-  if(unit === 'month'){
-    const prefix = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    return records.filter(r => r.date && r.date.startsWith(prefix));
-  } else {
-    const prefix = String(now.getFullYear());
-    return records.filter(r => r.date && r.date.startsWith(prefix));
-  }
-}
-function renderStats(){
-  const fMonth = countWithin(fatalRecords, 'month');
-  const fYear = countWithin(fatalRecords, 'year');
-  const nMonth = countWithin(nonFatalRecords, 'month');
-  const nYear = countWithin(nonFatalRecords, 'year');
-
-  document.getElementById('fatal-month-count').textContent = fMonth.length;
-  document.getElementById('fatal-year-count').textContent = fYear.length;
-  document.getElementById('nonfatal-month-count').textContent = nMonth.length;
-  document.getElementById('nonfatal-year-count').textContent = nYear.length;
-
-  document.getElementById('fatal-month-list').textContent = fMonth.slice(0,4).map(x=>x.person).join(', ');
-  document.getElementById('fatal-year-list').textContent = fYear.slice(0,4).map(x=>x.person).join(', ');
-  document.getElementById('nonfatal-month-list').textContent = nMonth.slice(0,4).map(x=>x.person).join(', ');
-  document.getElementById('nonfatal-year-list').textContent = nYear.slice(0,4).map(x=>x.person).join(', ');
-}
-
-/* ---------- Render everything ---------- */
-function renderAll(){
-  populateList('fatal'); populateList('nonfatal');
-  renderRecent(document.getElementById('filter-type').value || 'all');
-  renderStats();
-  saveAll();
-}
-
-/* filter change */
-document.getElementById('filter-type').addEventListener('change', (e)=> renderRecent(e.target.value));
-
-/* ---------- View page actions ---------- */
-document.getElementById('view-share').addEventListener('click', ()=> { if(currentView) shareRecord(currentView); });
-document.getElementById('view-delete').addEventListener('click', ()=> { if(currentView) confirmDelete(currentView); });
-
-/* ---------- Utilities ---------- */
-function escapeHtml(s){ if(!s) return ''; return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;'); }
-
-/* ---------- After login initialisation ---------- */
-function afterLogin(){
-  populateDeleted();
-  renderAll();
-  showPage('dashboard-page');
-}
-
-/* ---------- Seed demo data if none ---------- */
-(function seed(){
-  if(fatalRecords.length===0 && nonFatalRecords.length===0 && deletedRecords.length===0){
-    const d = new Date(); const ds = d.toISOString().slice(0,10);
-    fatalRecords.push({ id: uid(), type:'fatal', date:ds, time:'07:30', person:'Juan Dela Cruz', location:'Zone 1', description:'Vehicle collision', status:'Closed', createdAt:new Date().toISOString() });
-    nonFatalRecords.push({ id: uid(), type:'nonfatal', date:ds, time:'13:15', person:'Maria Santos', location:'Zone 3', description:'Slip and fall', status:'Investigating', createdAt:new Date().toISOString() });
-    saveAll();
-  }
-})();
-
-/* ---------- Init ---------- */
-renderAll();
-
-/* ---------- Small accessibility: close menus on escape ---------- */
-document.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') document.querySelectorAll('.menu').forEach(m=>m.classList.remove('show')); });
-
-</script>
+    <script src="app.js"></script>
 </body>
 </html>
