@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Barangay Incident Record System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="wrap">
+
+        <header class="app-header">
+            <div class="app-title"><i class="fas fa-shield-alt"></i> Barangay Incident Record System</div>
+            <div class="header-actions">
+                <button id="btn-logout" class="btn btn-ghost" title="Logout" style="display:none"><i class="fas fa-sign-out-alt"></i> Logout</button>
+            </div>
+        </header>
+
+        <section id="login-page" class="page active">
+            <div class="login-wrap">
+                <div class="login-card card">
+                    <h1>Barangay Incident System</h1>
+                    <form id="login-form" autocomplete="off">
+                        <div class="input"><i class="fas fa-user"></i><input id="username" placeholder="Username" required autofocus /></div>
+                        <div class="input"><i class="fas fa-lock"></i><input id="password" type="password" placeholder="Password" required /></div>
+                        <div style="display:flex; gap:10px; margin-top:10px;">
+                            <button type="submit" class="btn btn-primary" style="flex:1">LOGIN</button>
+                        </div>
+                        <div style="margin-top:10px; text-align:center"><a href="#" id="create-account" class="muted">Create Account</a></div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section id="create-page" class="page">
+            <div class="login-wrap">
+                <div class="login-card card" style="width:400px; text-align:left; padding:32px;">
+                    <h2 style="font-size:24px; color:#0b2a66; margin-bottom:20px; text-align:center;">Create New Account</h2>
+                    <form id="create-form" autocomplete="off">
+                        <div class="input"><i class="fas fa-user"></i><input id="c-username" placeholder="Choose Username" required /></div>
+                        <div class="input"><i class="fas fa-lock"></i><input id="c-password" type="password" placeholder="Choose Password" required /></div>
+                        <div class="input"><i class="fas fa-lock"></i><input id="c-password-confirm" type="password" placeholder="Confirm Password" required /></div>
+
+                        <div style="display:flex; gap:10px; margin-top:20px;">
+                            <button type="button" id="back-to-login" class="btn btn-ghost" style="flex:1">Back to Login</button>
+                            <button type="submit" class="btn btn-primary" style="flex:1">REGISTER</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section id="dashboard-page" class="page">
+            <div class="grid">
+                <div class="panel-left card">
+                    <div class="dash-actions">
+                        <div style="font-weight:900;color:#0b2a66">Dashboard</div>
+                        <div style="display:flex; gap:8px;">
+                            <button id="add-record" class="btn btn-primary"><i class="fas fa-plus"></i> Add Record</button>
+                            <button id="open-deleted" class="btn btn-ghost"><i class="fas fa-trash-restore"></i> Deleted</button>
+                        </div>
+                    </div>
+
+                    <div class="big-buttons">
+                        <div id="goto-fatal" class="dash-btn"><i class="fas fa-skull-crossbones"></i> Fatal</div>
+                        <div id="goto-nonfatal" class="dash-btn"><i class="fas fa-notes-medical"></i> Non-Fatal</div>
+                    </div>
+
+                    <div style="display:flex; gap:12px; margin-top:14px;">
+                        <div class="small-stat" style="flex:1">
+                            <div class="small">Fatal — This Month</div>
+                            <div id="fatal-month-count" style="font-size:20px; margin-top:6px">0</div>
+                            <div id="fatal-month-list" class="muted" style="margin-top:6px"></div>
+                        </div>
+                        <div class="small-stat" style="flex:1">
+                            <div class="small">Fatal — This Year</div>
+                            <div id="fatal-year-count" style="font-size:20px; margin-top:6px">0</div>
+                            <div id="fatal-year-list" class="muted" style="margin-top:6px"></div>
+                        </div>
+                    </div>
+
+                    <div style="display:flex; gap:12px; margin-top:12px;">
+                        <div class="small-stat" style="flex:1">
+                            <div class="small">Non-Fatal — This Month</div>
+                            <div id="nonfatal-month-count" style="font-size:20px; margin-top:6px">0</div>
+                            <div id="nonfatal-month-list" class="muted" style="margin-top:6px"></div>
+                        </div>
+                        <div class="small-stat" style="flex:1">
+                            <div class="small">Non-Fatal — This Year</div>
+                            <div id="nonfatal-year-count" style="font-size:20px; margin-top:6px">0</div>
+                            <div id="nonfatal-year-list" class="muted" style="margin-top:6px"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel-right card">
+                    <div style="display:flex; justify-content:space-between; align-items:center;">
+                        <div style="font-weight:900; color:#0b2a66">Recent Records</div>
+                        <div style="display:flex; gap:8px; align-items:center;">
+                            <select id="filter-type" style="padding:8px; border-radius:8px; border:1px solid rgba(13,35,80,0.06); font-weight:900;">
+                                <option value="all">All</option>
+                                <option value="fatal">Fatal</option>
+                                <option value="nonfatal">Non-Fatal</option>
+                            </select>
+                            <button id="export-json" class="btn btn-ghost">Export</button>
+                        </div>
+                    </div>
+
+                    <ul id="recent-list" class="record-list"></ul>
+                    <div style="display:flex; justify-content:flex-end; gap:8px; margin-top:10px;">
+                        <button id="clear-all" class="btn btn-ghost">Move All to Deleted</button>
+                        <button id="clear-perm" class="btn btn-ghost" title="Permanently clear deleted" style="display:none">Clear Deleted</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="fatal-page" class="page">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="font-weight:900;color:#0b2a66">Fatal Records</div>
+                    <div style="display:flex; gap:8px;">
+                        <button id="back-to-dash-from-fatal" class="btn btn-ghost">Back</button>
+                        <button id="add-fatal" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
+                    </div>
+                </div>
+                <ul id="fatal-list" class="record-list"></ul>
+            </div>
+        </section>
+
+        <section id="nonfatal-page" class="page">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="font-weight:900;color:#0b2a66">Non-Fatal Records</div>
+                    <div style="display:flex; gap:8px;">
+                        <button id="back-to-dash-from-nonfatal" class="btn btn-ghost">Back</button>
+                        <button id="add-nonfatal" class="btn btn-primary"><i class="fas fa-plus"></i> Add</button>
+                    </div>
+                </div>
+                <ul id="nonfatal-list" class="record-list"></ul>
+            </div>
+        </section>
+
+        <section id="add-page" class="page">
+            <div class="form-card card" style="max-width:820px; margin:0 auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div id="form-title" style="font-weight:900;color:#123061">Add New Record</div>
+                    <div style="display:flex; gap:8px;">
+                        <button id="cancel-add" class="btn btn-ghost">Cancel</button>
+                        <button id="save-record" class="btn btn-primary">Save</button>
+                    </div>
+                </div>
+
+                <form id="record-form" class="form-grid" style="margin-top:12px;">
+                    <div>
+                        <label>Type</label>
+                        <select id="type" required>
+                            <option value="" disabled selected>Select type</option>
+                            <option value="fatal">Fatal</option>
+                            <option value="nonfatal">Non-Fatal</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label>Date</label>
+                        <input id="date" type="date" required />
+                    </div>
+                    <div>
+                        <label>Time</label>
+                        <input id="time" type="time" />
+                    </div>
+                    <div>
+                        <label>Person</label>
+                        <input id="person" type="text" placeholder="Name or Identifier" required />
+                    </div>
+                    <div class="full" style="grid-column:1 / -1;">
+                        <label>Location</label>
+                        <input id="location" type="text" placeholder="Zone / Street / Barangay" required />
+                    </div>
+                    <div class="full" style="grid-column:1 / -1;">
+                        <label>Description</label>
+                        <textarea id="description" placeholder="Details..." required></textarea>
+                    </div>
+                </form>
+            </div>
+        </section>
+
+        <section id="view-page" class="page">
+            <div class="view-card card" style="max-width:820px; margin:0 auto;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div id="view-title" style="font-weight:900;color:#123061">View Record</div>
+                    <div style="display:flex; gap:8px;">
+                        <button id="back-from-view" class="btn btn-ghost">Back</button>
+                        <button id="edit-from-view" class="btn btn-primary">Edit</button>
+                    </div>
+                </div>
+
+                <div style="margin-top:12px;">
+                    <div class="view-row">
+                        <div class="view-col">
+                            <div class="small">Type</div>
+                            <div id="v-type" class="rec-title"></div>
+                            <div style="margin-top:8px" class="small">Person</div>
+                            <div id="v-person" class="rec-title"></div>
+                            <div style="margin-top:8px" class="small">Location</div>
+                            <div id="v-location" class="rec-title"></div>
+                        </div>
+                        <div class="view-col">
+                            <div class="small">Date & Time</div>
+                            <div id="v-datetime" class="rec-sub"></div>
+                            <div style="margin-top:8px" class="small">Status</div>
+                            <div id="v-status" class="rec-sub"></div>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:12px;">
+                        <div class="small">Description</div>
+                        <div id="v-desc" style="margin-top:8px; font-weight:900; color:#083067;"></div>
+                    </div>
+
+                    <div style="margin-top:12px; display:flex; gap:8px;">
+                        <button id="view-share" class="btn btn-ghost"><i class="fas fa-share-alt"></i> Share</button>
+                        <button id="view-delete" class="btn btn-primary" style="background:#d9534f; color:white"><i class="fas fa-trash"></i> Delete</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="deleted-page" class="page">
+            <div class="card">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div style="font-weight:900;color:#0b2a66">Deleted Records History</div>
+                    <div style="display:flex; gap:8px;">
+                        <button id="back-from-deleted" class="btn btn-ghost">Back</button>
+                        <button id="clear-deleted-perm" class="btn btn-primary" style="background:#d9534f;color:white">Clear Permanently</button>
+                    </div>
+                </div>
+
+                <div id="deleted-list"></div>
+            </div>
+        </section>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
